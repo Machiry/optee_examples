@@ -1,4 +1,4 @@
-project (hello_world C)
+project (widevine_qsee_bug C)
 
 set (SRC host/main.c)
 

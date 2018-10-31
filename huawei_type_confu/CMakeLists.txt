@@ -1,4 +1,4 @@
-project (hello_world C)
+project (huawei_type_confu C)
 
 set (SRC host/main.c)
 
