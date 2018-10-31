@@ -35,7 +35,7 @@
 /* To the the UUID (found the the TA's h-file(s)) */
 #include <hello_world_ta.h>
 
-int main(void)
+int main(int argc, char **argv)
 {
 	TEEC_Result res;
 	TEEC_Context ctx;
@@ -106,13 +106,13 @@ int main(void)
 	op.params[0].tmpref.buffer = &tarReq;
 	op.params[0].tmpref.size = sizeof(tarReq);
 	
-	printf("Invoking Widevine buggy command\n");
+	printf("Invoking Widevine buggy command without trigerring vuln\n");
     res = TEEC_InvokeCommand(&sess, TA_HELLO_WORLD_CMD_DEC_VALUE9, &op,
 				     &err_origin);
     if (res != TEEC_SUCCESS)
 	    errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
 			    res, err_origin);
-    printf("Finished invoking Widevine buggy command\n");
+    printf("Finished invoking Widevine buggy command without trigerring vuln\n");
 	
 	
 	for(stcmdid=TA_HELLO_WORLD_CMD_INC_VALUE10; stcmdid <= TA_HELLO_WORLD_CMD_DEC_VALUE12; stcmdid++) {
@@ -146,6 +146,25 @@ int main(void)
 		    errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
 			    res, err_origin);
 	    printf("TA incremented value to %d\n", op.params[0].value.a);
+	}
+	
+	if(argc > 1) {
+	    memset(&tarReq, 0, sizeof(tarReq));
+	    tarReq.a = 64;
+	    tarReq.buflen = 1024;
+	    memset(&op, 0, sizeof(op));
+        op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_NONE,
+					         TEEC_NONE, TEEC_NONE);
+	    op.params[0].tmpref.buffer = &tarReq;
+	    op.params[0].tmpref.size = sizeof(tarReq);
+	
+	    printf("Invoking Widevine buggy command\n");
+        res = TEEC_InvokeCommand(&sess, TA_HELLO_WORLD_CMD_DEC_VALUE9, &op,
+				         &err_origin);
+        if (res != TEEC_SUCCESS)
+	        errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
+			        res, err_origin);
+        printf("Finished invoking Widevine buggy command\n");
 	}
 
 	/*

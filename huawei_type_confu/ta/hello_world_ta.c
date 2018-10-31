@@ -131,14 +131,17 @@ static TEE_Result buggy_func(uint32_t param_types,
 
 	/*if (param_types != exp_param_types)
 		return TEE_ERROR_BAD_PARAMETERS;*/
+		
 	
-	if(params[0].memref.size < sizeof(tmpBuff)) {
+	DMSG("Got value: %u, %u, %u, %u\n", params[0].value.b, params[0].value.a, params[1].value.a, sizeof(tmpBuff));
+	
+	if(params[0].value.a < sizeof(tmpBuff)) {
 	    return TEE_ERROR_BAD_PARAMETERS;
 	}
 	
 	if(params[1].value.a == 16) {
 	    // TYPE CONFUSION BUG
-    	TEE_MemMove(tmpBuff, params[0].memref.buffer, params[0].memref.size);
+    	TEE_MemMove(tmpBuff, (void*)params[0].value.b, params[0].value.a);
 	}
    	return TEE_SUCCESS;
     

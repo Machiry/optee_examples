@@ -123,6 +123,7 @@ static TEE_Result buggy_func(uint32_t param_types,
 						   TEE_PARAM_TYPE_NONE);
     
     int *data;
+    int buf[16];
 
 	DMSG("has been called");
 
@@ -132,10 +133,11 @@ static TEE_Result buggy_func(uint32_t param_types,
 	IMSG("Got value: %u from NW", params[0].value.a);
 	
 	// the bug
-	data = (int *)params[0].memref.buffer;
-	if(data != NULL) {
-	    *data = 0;
-	}
+	DMSG("Writing to: %p\n", buf + params[0].value.a);
+	*(buf + params[0].value.a) = 0;
+	
+	params[0].value.a--;
+	
 	
 	IMSG("Decrease value to: %u", params[0].value.a);
 
