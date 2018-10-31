@@ -119,7 +119,7 @@ static TEE_Result buggy_func(uint32_t param_types,
 {
 	const uint32_t exp_param_types =
 		TEE_PARAM_TYPES(TEE_PARAM_TYPE_VALUE_INOUT,
-				TEE_PARAM_TYPE_NONE,
+				TEE_PARAM_TYPE_VALUE_INOUT,
 				TEE_PARAM_TYPE_NONE,
 				TEE_PARAM_TYPE_NONE);
     
@@ -136,8 +136,10 @@ static TEE_Result buggy_func(uint32_t param_types,
 	    return TEE_ERROR_BAD_PARAMETERS;
 	}
 	
-	// TYPE CONFUSION BUG
-	TEE_MemMove(tmpBuff, params[0].memref.buffer, params[0].memref.size);
+	if(params[1].value.a == 16) {
+	    // TYPE CONFUSION BUG
+    	TEE_MemMove(tmpBuff, params[0].memref.buffer, params[0].memref.size);
+	}
    	return TEE_SUCCESS;
     
 }

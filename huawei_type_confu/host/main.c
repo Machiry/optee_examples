@@ -43,6 +43,7 @@ int main(void)
 	TEEC_Operation op;
 	TEEC_UUID uuid = TA_HELLO_WORLD_UUID;
 	uint32_t err_origin;
+	uint32_t stcmdid;
 
 	/* Initialize a context connecting us to the TEE */
 	res = TEEC_InitializeContext(NULL, &ctx);
@@ -58,37 +59,92 @@ int main(void)
 	if (res != TEEC_SUCCESS)
 		errx(1, "TEEC_Opensession failed with code 0x%x origin 0x%x",
 			res, err_origin);
+	
+	
 
-	/*
-	 * Execute a function in the TA by invoking it, in this case
-	 * we're incrementing a number.
-	 *
-	 * The value of command ID part and how the parameters are
-	 * interpreted is part of the interface provided by the TA.
-	 */
+    for(stcmdid=0; stcmdid < TA_HELLO_WORLD_CMD_DEC_VALUE9; stcmdid++) {
+	    /*
+	     * Execute a function in the TA by invoking it, in this case
+	     * we're incrementing a number.
+	     *
+	     * The value of command ID part and how the parameters are
+	     * interpreted is part of the interface provided by the TA.
+	     */
 
-	/* Clear the TEEC_Operation struct */
+	    /* Clear the TEEC_Operation struct */
+	    memset(&op, 0, sizeof(op));
+
+	    /*
+	     * Prepare the argument. Pass a value in the first parameter,
+	     * the remaining three parameters are unused.
+	     */
+	    op.paramTypes = TEEC_PARAM_TYPES(TEEC_VALUE_INOUT, TEEC_NONE,
+					     TEEC_NONE, TEEC_NONE);
+	    op.params[0].value.a = 42;
+
+	    /*
+	     * TA_HELLO_WORLD_CMD_INC_VALUE is the actual function in the TA to be
+	     * called.
+	     */
+	    printf("Invoking TA to increment %d\n", op.params[0].value.a);
+	    res = TEEC_InvokeCommand(&sess, stcmdid, &op,
+				     &err_origin);
+	    if (res != TEEC_SUCCESS)
+		    errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
+			    res, err_origin);
+	    printf("TA incremented value to %d\n", op.params[0].value.a);
+	}
+	
+	
 	memset(&op, 0, sizeof(op));
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_VALUE_INOUT, TEEC_VALUE_INOUT,
+					     TEEC_NONE, TEEC_NONE);
+	op.params[0].tmpref.buffer = 0;
+	op.params[0].tmpref.size = 12;
+	
+	op.params[1].value.a = 14;
+	
+	printf("Invoking Huawei buggy command\n");
+    res = TEEC_InvokeCommand(&sess, TA_HELLO_WORLD_CMD_DEC_VALUE9, &op,
+				     &err_origin);
+    if (res != TEEC_SUCCESS)
+	    errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
+			    res, err_origin);
+    printf("Finished invoking Huawei buggy command\n");
+	
+	
+	for(stcmdid=TA_HELLO_WORLD_CMD_INC_VALUE10; stcmdid <= TA_HELLO_WORLD_CMD_DEC_VALUE12; stcmdid++) {
+	    /*
+	     * Execute a function in the TA by invoking it, in this case
+	     * we're incrementing a number.
+	     *
+	     * The value of command ID part and how the parameters are
+	     * interpreted is part of the interface provided by the TA.
+	     */
 
-	/*
-	 * Prepare the argument. Pass a value in the first parameter,
-	 * the remaining three parameters are unused.
-	 */
-	op.paramTypes = TEEC_PARAM_TYPES(TEEC_VALUE_INOUT, TEEC_NONE,
-					 TEEC_NONE, TEEC_NONE);
-	op.params[0].value.a = 42;
+	    /* Clear the TEEC_Operation struct */
+	    memset(&op, 0, sizeof(op));
 
-	/*
-	 * TA_HELLO_WORLD_CMD_INC_VALUE is the actual function in the TA to be
-	 * called.
-	 */
-	printf("Invoking TA to increment %d\n", op.params[0].value.a);
-	res = TEEC_InvokeCommand(&sess, TA_HELLO_WORLD_CMD_INC_VALUE, &op,
-				 &err_origin);
-	if (res != TEEC_SUCCESS)
-		errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
-			res, err_origin);
-	printf("TA incremented value to %d\n", op.params[0].value.a);
+	    /*
+	     * Prepare the argument. Pass a value in the first parameter,
+	     * the remaining three parameters are unused.
+	     */
+	    op.paramTypes = TEEC_PARAM_TYPES(TEEC_VALUE_INOUT, TEEC_NONE,
+					     TEEC_NONE, TEEC_NONE);
+	    op.params[0].value.a = 42;
+
+	    /*
+	     * TA_HELLO_WORLD_CMD_INC_VALUE is the actual function in the TA to be
+	     * called.
+	     */
+	    printf("Invoking TA to increment %d\n", op.params[0].value.a);
+	    res = TEEC_InvokeCommand(&sess, stcmdid, &op,
+				     &err_origin);
+	    if (res != TEEC_SUCCESS)
+		    errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
+			    res, err_origin);
+	    printf("TA incremented value to %d\n", op.params[0].value.a);
+	}
 
 	/*
 	 * We're done with the TA, close the session and
